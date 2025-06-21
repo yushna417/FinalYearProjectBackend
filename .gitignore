@@ -1,0 +1,39 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+
+# SQLite (just in case)
+*.sqlite3
+
+# PostgreSQL credentials / env files
+.env
+
+# Django stuff:
+*.log
+*.pot
+*.pyc
+__pycache__/
+local_settings.py
+db.sqlite3
+media
+staticfiles
+static
+
+# Virtual environment
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# IDEs
+.vscode/
+.idea/
+
+# Migrations (optional to exclude .py files inside migrations)
+**/migrations/__pycache__/
+**/migrations/*.py[cod]
+
+# System
+.DS_Store
+Thumbs.db
