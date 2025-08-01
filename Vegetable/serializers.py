@@ -4,7 +4,12 @@ from .models import User, Veg, DailyPrice, Order
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = '__all__'
+        fields = ['phone', 'password', 'full_name', 'role', 'profile_image', 'city'] 
+        extra_kwargs = {"password":{"write_only":True }}
+    
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        return user
 
 class VegSerializer(serializers.ModelSerializer):
     class Meta:

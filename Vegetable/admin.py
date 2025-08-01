@@ -4,7 +4,7 @@ from .models import User, Veg, Order, DailyPrice
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'full_name', 'role', 'phone', 'city', 'created_at')
+    list_display = ('full_name', 'role', 'phone', 'city')
 
 
 @admin.register(Veg)
