@@ -32,7 +32,7 @@ class VegAdmin(admin.ModelAdmin):
 @admin.register(DailyPrice)
 class DailyPriceAdmin(admin.ModelAdmin):
     list_display = ('vegetable', 'date', 'min_price', 'max_price', 'avg_price')
-    list_filter = ('date', 'vegetable')  # Optional filters
+    list_filter = ('date', 'vegetable') 
     search_fields = ('vegetable__name',)
 
 

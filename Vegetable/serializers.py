@@ -22,25 +22,29 @@ class VegSerializer(serializers.ModelSerializer):
         model = Veg
         fields = ['id', 'name', 'unit']
 
-# serializers.py
 class DailyPriceSerializer(serializers.ModelSerializer):
     daily_change = serializers.SerializerMethodField()
     trend = serializers.SerializerMethodField()
 
     class Meta:
         model = DailyPrice
-        fields = '__all__'
+        fields = [
+            'id', 'date', 'min_price', 'max_price', 'avg_price',
+            'vegetable', 'daily_change', 'trend',
+        ]
 
     def get_daily_change(self, obj):
-        if hasattr(obj, 'daily_change'):
-            return round(obj.daily_change, 2)
-        return None
+        prev_price = getattr(obj, 'previous_price', None)
+        if prev_price is None or prev_price == 0:
+            return None
+        return round(((obj.avg_price - prev_price) / prev_price) * 100, 2)
 
     def get_trend(self, obj):
-        if hasattr(obj, 'daily_change'):
-            if obj.daily_change > 0: return 'up'
-            if obj.daily_change < 0: return 'down'
-        return 'neutral'
+        change = self.get_daily_change(obj)
+        if change is None:
+            return "neutral"
+        return "up" if change > 0 else "down" if change < 0 else "neutral"
+
 
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:

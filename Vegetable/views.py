@@ -12,8 +12,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.db.models import F, Window
-from django.db.models.functions import Lag
+from django.db.models import OuterRef, Subquery, F, FloatField, Case, When, DateField
+from django.db.models.functions import Cast
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -29,44 +29,55 @@ class VegViewSet(viewsets.ReadOnlyModelViewSet):
     filterset_fields = ['name']
     search_fields = ['name']
 
-
 class DailyPriceViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = DailyPrice.objects.all()
+
     serializer_class = DailyPriceSerializer
     permission_classes = [IsAuthenticated]
-    
-    # Add these filter backends
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields = ['vegetable']  
-    ordering_fields = ['date'] 
-    ordering = ['-date']  
+    filterset_fields = ['vegetable']
+    ordering_fields = ['date']
+    ordering = ['-date']
+
+    def get_queryset(self):
+        queryset = DailyPrice.objects.all()
+
+        previous_price_subquery = DailyPrice.objects.filter(
+            vegetable=OuterRef('vegetable'),
+            date__lt=OuterRef('date')
+        ).order_by('-date').values('avg_price')[:1]
+
+        previous_date_subquery = DailyPrice.objects.filter(
+            vegetable=OuterRef('vegetable'),
+            date__lt=OuterRef('date')
+        ).order_by('-date').values('date')[:1]
+
+        queryset = queryset.annotate(
+            previous_date=Subquery(previous_date_subquery, output_field=DateField()),
+            previous_price=Subquery(previous_price_subquery),
+            daily_change_percentage=Case(
+                When(
+                    previous_price__isnull=False,
+                    then=((F('avg_price') - F('previous_price')) / F('previous_price')) * 100
+                ),
+                default=None,
+                output_field=FloatField()
+            )
+        )
+        return queryset
 
     @action(detail=False, methods=['get'])
     def with_daily_change(self, request):
-        queryset = self.filter_queryset(self.get_queryset())
-        
-        queryset = queryset.annotate(
-            previous_price=Window(
-                expression=Lag('avg_price'),
-                partition_by=['vegetable'],
-                order_by=F('date').asc()
-            )
-        )
-        
-        queryset = queryset.annotate(
-            daily_change_percentage=(
-                (F('avg_price') - F('previous_price')) / 
-                F('previous_price') * 100
-            ) if F('previous_price') != 0 else 0
-        )
-        
+        queryset = self.filter_queryset(self.get_queryset()).order_by('-date')
+
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = self.get_serializer(page, many=True)
             return self.get_paginated_response(serializer.data)
-        
+
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+    
 
 class OrderListView(generics.ListAPIView):
     queryset = Order.objects.all()
