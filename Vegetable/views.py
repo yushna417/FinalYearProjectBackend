@@ -35,7 +35,7 @@ class DailyPriceViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = DailyPriceSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter]
-    filterset_fields = ['vegetable']
+    filterset_fields = ['vegetable', 'date']
     ordering_fields = ['date']
     ordering = ['-date']
 

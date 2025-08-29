@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, UserManager, PermissionsMixin
-from django.utils import timezone
-# User model
+from datetime import date
+
 
 class CustomUserManager(UserManager):
     def _create_user(self, phone, password, **extra_fields):
@@ -41,7 +41,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_superuser = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
 
-    date_joined = models.DateField(default=timezone.now)
+    date_joined = models.DateField(default=date.today)
     last_login = models.DateField(blank=True, null=True)
 
     objects = CustomUserManager()

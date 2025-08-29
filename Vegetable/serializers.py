@@ -4,7 +4,7 @@ from .models import User, Veg, DailyPrice, Order
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['phone', 'password', 'full_name', 'role', 'profile_image', 'city'] 
+        fields = ['phone', 'password', 'full_name', 'role', 'profile_image', 'city', "date_joined"] 
         extra_kwargs = {
         "password":{"write_only":True },
         "phone": {"required": True},
