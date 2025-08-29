@@ -20,7 +20,7 @@ SECRET_KEY = env.str("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG", default=False)
 
-ALLOWED_HOSTS = ['192.168.254.2', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['192.168.254.5', 'localhost', '127.0.0.1']
 AUTH_USER_MODEL = 'Vegetable.User'  # 'app_name.model_name'
 
 
