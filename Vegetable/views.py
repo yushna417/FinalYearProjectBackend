@@ -1,7 +1,6 @@
 from rest_framework import viewsets, generics, status
-from .models import User, Veg, DailyPrice, Order
+from .models import User, Veg, DailyPrice, Order, Notification
 from .serializers import UserSerializer, VegSerializer, DailyPriceSerializer, OrderSerializer
-from django.shortcuts import render
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -11,9 +10,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
-from rest_framework.response import Response
 from django.db.models import OuterRef, Subquery, F, FloatField, Case, When, DateField
-from django.db.models.functions import Cast
 
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -125,3 +122,4 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         token_data['role'] = user.role
 
         return Response(token_data, status=status.HTTP_200_OK)
+    

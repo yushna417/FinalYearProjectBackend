@@ -77,9 +77,35 @@ class DailyPrice(models.Model):
 
 # Order
 class Order(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('accepted', 'Accepted'),
+        ('rejected', 'Rejected'),
+        ('countered', 'Countered'),
+        ('completed', 'Completed'),
+    ]
     customer = models.ForeignKey(User, related_name='customer_orders', on_delete=models.CASCADE)
     vendor = models.ForeignKey(User, related_name='vendor_orders', on_delete=models.CASCADE)
     vegetable = models.ForeignKey(Veg, on_delete=models.CASCADE)
     quantity = models.FloatField()
-    price = models.FloatField()
-    date = models.DateTimeField(auto_now_add=True)
+    proposed_price = models.DecimalField(max_digits=8, decimal_places=2)
+    counter_price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    final_price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    location = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+class Notification(models.Model):
+    NOTIFICATION_TYPES = [
+        ('new_order', 'New Order'),
+        ('accepted', 'Order Accepted'),
+        ('rejected', 'Order Rejected'),
+        ('counter_offer', 'Counter Offer'),
+    ]    
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
+    title = models.CharField(max_length=200)
+    message = models.TextField()
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
