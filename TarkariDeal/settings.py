@@ -20,7 +20,7 @@ SECRET_KEY = env.str("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = env.bool("DEBUG", default=False)
 
-ALLOWED_HOSTS = ['192.168.254.4', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['192.168.254.5', 'localhost', '127.0.0.1']
 AUTH_USER_MODEL = 'Vegetable.User'  # 'app_name.model_name'
 
 
@@ -28,6 +28,7 @@ AUTH_USER_MODEL = 'Vegetable.User'  # 'app_name.model_name'
 
 INSTALLED_APPS = [
     'Vegetable',
+    'simpleui',
     'rest_framework',
     'corsheaders',
     'django.contrib.admin',
@@ -38,6 +39,63 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_filters'
 ]
+
+SIMPLEUI_HOME_INFO = False  # Remove simpleui advertising
+SIMPLEUI_ANALYSIS = False   # Disable analytics
+SIMPLEUI_LOGO = '\media\logo.png'  # Your logo path
+
+# settings.py (or development.py)
+SIMPLEUI_CONFIG = {
+    'system_keep': False,  # Use custom menu
+    'dynamic': False,  # Set to False
+    
+    # Home page info card
+    'home_title': 'Dashboard',
+    'home_icon': 'fas fa-tachometer-alt',
+    
+    # Menu configuration
+    'menus': [
+        {
+            'name': 'Users',
+            'icon': 'fas fa-users',
+            'url': 'Vegetable/user/'  # Correct URL format
+        },
+        {
+            'name': 'Vegetables',
+            'icon': 'fas fa-carrot',
+            'url': 'Vegetable/veg/'  # Correct URL format
+        },
+        {
+            'name': 'Daily Prices',
+            'icon': 'fas fa-chart-line',
+            'url': 'Vegetable/dailyprice/'  # Correct URL format
+        },
+        {
+            'name': 'Orders',
+            'icon': 'fas fa-shopping-cart',
+            'url': 'Vegetable/order/'  # Correct URL format
+        },
+        {
+            'name': 'VendorResponse',
+            'icon': 'fa-solid fa-bullhorn',
+            'url': 'Vegetable/vendorresponse/'  # Correct URL format
+        },
+        {
+            'name': 'Notifications',
+            'icon': 'fa-solid fa-bell',
+            'url': 'Vegetable/notification/'  # Correct URL format
+        },
+       
+    ]
+}
+# Customize Simple UI icons for your models
+SIMPLEUI_ICON = {
+    'User': 'fas fa-user',
+    'Veg': 'fas fa-carrot',
+    'Order': 'fas fa-shopping-cart',
+    'DailyPrice': 'fas fa-chart-line',
+    'Group': 'fas fa-users',
+}
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',

@@ -10,6 +10,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, filters
 from rest_framework.decorators import action
+from rest_framework.parsers import MultiPartParser, FormParser
 from django.db.models import OuterRef, Subquery, F, FloatField, Case, When, DateField
 
 
@@ -122,4 +123,32 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         token_data['role'] = user.role
 
         return Response(token_data, status=status.HTTP_200_OK)
+    
+
+
+class UpdateProfileImageView(APIView):
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+    
+    def patch(self, request):
+        user = request.user
+        profile_image = request.FILES.get('profile_image')
+        
+        if not profile_image:
+            return Response(
+                {'error': 'No image provided'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Delete old image if exists
+        if user.profile_image:
+            user.profile_image.delete(save=False)
+        
+        user.profile_image = profile_image
+        user.save()
+        
+        return Response({
+            'message': 'Profile image updated successfully',
+            'profile_image': user.profile_image.url if user.profile_image else None
+        }, status=status.HTTP_200_OK)
     

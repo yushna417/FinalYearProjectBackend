@@ -75,37 +75,102 @@ class DailyPrice(models.Model):
     max_price = models.FloatField()
     avg_price = models.FloatField()
 
-# Order
+# models.py - Add new models
+
 class Order(models.Model):
     STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('vendor_accepted', 'Vendor Accepted'),
+        ('customer_accepted', 'Customer Accepted'),
+        ('customer_rejected', 'Customer Rejected'),
+        ('completed', 'Completed'),
+        ('expired', 'Expired'),
+    ]
+
+    PAYMENT_CHOICES = [
+        ('qr', 'QR'),
+        ('cash', 'CASH')
+    ]
+
+    customer = models.ForeignKey(User, related_name='customer_orders', on_delete=models.CASCADE)
+    # Remove vendor field from Order - it will be in VendorResponse
+    vegetable = models.ForeignKey(Veg, on_delete=models.CASCADE)
+    quantity = models.FloatField(null=True, blank=True)
+    proposed_price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    delivery_charge = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    location = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    payment_Method = models.CharField(max_length=10, choices=PAYMENT_CHOICES, null=True, blank=True)
+    order_Status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    
+    # Final vendor selection (only set when customer accepts an offer)
+    selected_vendor = models.ForeignKey(User, null=True, blank=True, 
+                                        related_name='selected_orders', on_delete=models.SET_NULL)
+    final_price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    final_delivery_charge = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    
+    def __str__(self):
+        return f"Order #{self.id} - {self.vegetable.name}"
+
+class VendorResponse(models.Model):
+    RESPONSE_CHOICES = [
         ('pending', 'Pending'),
         ('accepted', 'Accepted'),
         ('rejected', 'Rejected'),
         ('countered', 'Countered'),
-        ('completed', 'Completed'),
+        ('customer_accepted', 'Customer Accepted'),
+        ('customer_rejected', 'Customer Rejected'),
     ]
-    customer = models.ForeignKey(User, related_name='customer_orders', on_delete=models.CASCADE)
-    vendor = models.ForeignKey(User, related_name='vendor_orders', on_delete=models.CASCADE)
-    vegetable = models.ForeignKey(Veg, on_delete=models.CASCADE)
-    quantity = models.FloatField()
-    proposed_price = models.DecimalField(max_digits=8, decimal_places=2)
+    
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='vendor_responses')
+    vendor = models.ForeignKey(User, on_delete=models.CASCADE, related_name='vendor_responses')
+    response_type = models.CharField(max_length=20, choices=RESPONSE_CHOICES, default='pending')
+    
+    # For counter offers
     counter_price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
-    final_price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
-    location = models.TextField()
+    counter_delivery_charge = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['order', 'vendor']  # One response per vendor per order
+    
+    def __str__(self):
+        return f"{self.vendor.full_name} - {self.response_type} - Order #{self.order.id}"
 
+# models.py - Update Notification model
 class Notification(models.Model):
     NOTIFICATION_TYPES = [
         ('new_order', 'New Order'),
-        ('accepted', 'Order Accepted'),
-        ('rejected', 'Order Rejected'),
-        ('counter_offer', 'Counter Offer'),
+        ('vendor_accepted', 'Vendor Accepted'),
+        ('vendor_rejected', 'Vendor Rejected'),
+        ('vendor_countered', 'Vendor Countered'),
+        ('customer_accepted', 'Customer Accepted Vendor'),
+        ('customer_rejected', 'Customer Rejected Vendor'),
+        ('order_completed', 'Order Completed'),
+        ('order_expired', 'Order Expired'),
+        ('multiple_offers', 'Multiple Offers Received'),
     ]    
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    notification_type = models.CharField(max_length=20, choices=NOTIFICATION_TYPES)
-    title = models.CharField(max_length=200)
-    message = models.TextField()
+    notification_type = models.CharField(max_length=30, choices=NOTIFICATION_TYPES, null=True, blank=True)
+    title = models.CharField(max_length=200, null=True, blank=True)
+    message = models.TextField(null=True, blank=True)
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Add fields for vendor-specific notifications
+    related_vendor = models.ForeignKey(User, null=True, blank=True, 
+                                       related_name='related_notifications', 
+                                       on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return f"{self.title} - {self.user.full_name}"
+
+class FCMDevice(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    token = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+

@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers
 from .models import User, Veg, DailyPrice, Order
 
@@ -16,6 +17,16 @@ class UserSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = User.objects.create_user(**validated_data)
         return user
+
+    def get_profile_image(self, obj):
+        if obj.profile_image:
+            # Return full URL
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.profile_image.url)
+            # Fallback to constructing URL if no request context
+            return f"{settings.BASE_URL.rstrip('/')}/{obj.profile_image.url.lstrip('/')}"
+        return None
 
 class VegSerializer(serializers.ModelSerializer):
     class Meta:
